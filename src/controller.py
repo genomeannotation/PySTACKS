@@ -60,10 +60,22 @@ class Controller:
             
         elif args.paired_end_data:
             ## Demultiplex PAIRED-END samples. This will result in two .fastq.gz (R1 and R2) files for each individual in library.
-            self.demultiplexed_location = "./processed_PE/"
-            self.create_dir(self.demultiplexed_location)
-            self.create_dir(self.demultiplexed_location + args.species_name)
-            """nothing yet"""#TODO
+            if args.raw_data[-4:] == '.txt':
+                # many .fq samples
+                data = self.get_raw_data(args)
+                index = self.get_index_files(args)
+                self.demultiplexed_location = "./processed_PE/"
+                self.create_dir(self.demultiplexed_location)
+                self.create_dir(self.demultiplexed_location + args.species_name)
+                # use paired sets of data in command
+                for i in range(int(len(data)/2)): 
+                    command = "process_radtags -P -1 " + data[i*2] + " -2 " + data[i*2+1] + " -o " + self.demultiplexed_location + args.species_name + " -b " + index[i] + " --renz_1 nlaIII --renz_2 mluCI -c -q -r --inline_null"
+                    print("\n\nPySTACKS: " + command + "\n")
+                    os.system(command)
+
+        else:
+            print("you must choose single-ended(-s) or paired-ended (-p)")
+            sys.exit()
 
     ## Index (if needed) reference assembly to prepare for mapping reads.
     def index_reference_genome(self, args):
